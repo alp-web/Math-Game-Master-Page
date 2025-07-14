@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fractions Challenge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background: linear-gradient(to right, #fceabb, #f8b500);
+      text-align: center;
+    }
+    .box {
+      background: white;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    input, select, button {
+      font-size: 1.2em;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    #question {
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    #feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>¼ Fractions Challenge</h1>
+  <div class="box">
+    <input type="text" id="playerName" placeholder="Enter your name">
+    <select id="difficulty">
+      <option value="easy">Easy (Same denominator)</option>
+      <option value="medium">Intermediate (Different denominators)</option>
+      <option value="hard">Hard (Mixed operations)</option>
+    </select>
+    <button onclick="startGame()">Start</button>
+
+    <div id="questionArea" style="display:none;">
+      <div id="question"></div>
+      <input type="text" id="answer" placeholder="Your answer (e.g. 3/4)">
+      <br>
+      <button onclick="submitAnswer()">Submit</button>
+      <div id="feedback"></div>
+      <div id="score"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentQuestion = 0;
+    let score = 0;
+    let questions = [];
+    let playerName = '';
+    let level = '';
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function startGame() {
+      playerName = document.getElementById('playerName').value.trim();
+      if (!playerName) return alert("Enter your name");
+      level = document.getElementById('difficulty').value;
+      score = 0;
+      currentQuestion = 0;
+      questions = generateQuestions(level);
+      document.getElementById('questionArea').style.display = 'block';
+      showQuestion();
+    }
+
+    function generateQuestions(level) {
+      let qs = [];
+      for (let i = 0; i < 5; i++) {
+        let n1, d1, n2, d2, op, questionText, correct;
+        switch(level) {
+          case 'easy':
+            d1 = d2 = rand(2, 10);
+            n1 = rand(1, d1-1);
+            n2 = rand(1, d2-1);
+            op = '+';
+            correct = `${n1+n2}/${d1}`;
+            questionText = `${n1}/${d1} + ${n2}/${d2}`;
+            break;
+          case 'medium':
+            d1 = rand(2, 10);
+            d2 = rand(2, 10);
+            n1 = rand(1, d1-1);
+            n2 = rand(1, d2-1);
+            op = '+';
+            let commonDenom = d1 * d2;
+            let numSum = n1 * d2 + n2 * d1;
+            correct = `${numSum}/${commonDenom}`;
+            questionText = `${n1}/${d1} + ${n2}/${d2}`;
+            break;
+          case 'hard':
+            d1 = rand(2, 10);
+            d2 = rand(2, 10);
+            n1 = rand(1, d1-1);
+            n2 = rand(1, d2-1);
+            op = Math.random() > 0.5 ? '+' : '-';
+            let common = d1 * d2;
+            let result = op === '+' ? n1 * d2 + n2 * d1 : n1 * d2 - n2 * d1;
+            correct = `${result}/${common}`;
+            questionText = `${n1}/${d1} ${op} ${n2}/${d2}`;
+            break;
+        }
+        qs.push({ q: questionText, a: correct });
+      }
+      return qs;
+    }
+
+    function showQuestion() {
+      const q = questions[currentQuestion];
+      document.getElementById('question').innerText = `Q${currentQuestion+1}: ${q.q}`;
+      document.getElementById('answer').value = '';
+      document.getElementById('feedback').innerText = '';
+      document.getElementById('score').innerText = `Score: ${score}`;
+    }
+
+    function submitAnswer() {
+      const userAns = document.getElementById('answer').value.trim();
+      const correctAns = questions[currentQuestion].a;
+      if (userAns === correctAns) {
+        score++;
+        document.getElementById('feedback').innerText = '✅ Correct!';
+      } else {
+        document.getElementById('feedback').innerText = `❌ Wrong! Correct was ${correctAns}`;
+      }
+
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        setTimeout(showQuestion, 1000);
+      } else {
+        saveStats();
+        setTimeout(showResult, 1000);
+      }
+    }
+
+    function saveStats() {
+      const stats = JSON.parse(localStorage.getItem('fractionStats') || '{}');
+      if (!stats[playerName]) stats[playerName] = { easy: 0, medium: 0, hard: 0 };
+      stats[playerName][level] += score;
+      localStorage.setItem('fractionStats', JSON.stringify(stats));
+    }
+
+    function showResult() {
+      const stats = JSON.parse(localStorage.getItem('fractionStats') || '{}');
+      const s = stats[playerName];
+      const total = s.easy + s.medium + s.hard;
+      alert(`${playerName} - Total: ${total} (Easy: ${s.easy}, Medium: ${s.medium}, Hard: ${s.hard})`);
+      location.reload();
+    }
+  </script>
+</body>
+</html>

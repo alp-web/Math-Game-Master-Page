@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Math Games Master</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    .game-links {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    button {
+      font-size: 1.2em;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(to right, #43cea2, #185a9d);
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    button:hover {
+      background: linear-gradient(to right, #185a9d, #43cea2);
+    }
+    iframe {
+      width: 100%;
+      height: 90vh;
+      border: none;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 Math Games Master</h1>
+  <div class="game-links">
+    <button onclick="loadGame('smart-math.html')">➕➖✖️➗ Smart Math Game</button>
+    <button onclick="loadGame('fractions-challenge.html')">¼ Fractions Challenge</button>
+  </div>
+
+  <iframe id="gameFrame" src="" style="display:none;"></iframe>
+
+  <script>
+    function loadGame(file) {
+      document.getElementById('gameFrame').src = file;
+      document.getElementById('gameFrame').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

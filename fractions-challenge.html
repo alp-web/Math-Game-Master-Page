@@ -44,6 +44,23 @@
     #endGameBtn:hover {
       background: #b71c1c;
     }
+    #timer {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 1em;
+    }
+    th {
+      background: #f0f0f0;
+    }
   </style>
 </head>
 <body>
@@ -62,6 +79,8 @@
     </div>
 
     <div id="questionArea" style="display:none;">
+      <div id="playerInfo"></div>
+      <div id="timer">Total Time: 0s</div>
       <div id="question"></div>
       <input type="text" id="answer" placeholder="Your answer (e.g. 3/4)" />
       <br />
@@ -69,6 +88,7 @@
       <div id="feedback"></div>
       <div id="score"></div>
       <button id="endGameBtn" onclick="endGame()">End Game</button>
+      <div id="review"></div>
     </div>
   </div>
 
@@ -78,6 +98,9 @@
     let questions = [];
     let playerName = '';
     let level = '';
+    let startTime;
+    let timerInterval;
+    let reviewHistory = [];
 
     function rand(min, max) {
       return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -90,11 +113,18 @@
       score = 0;
       currentQuestion = 0;
       questions = generateQuestions(level);
+      startTime = Date.now();
+      reviewHistory = [];
 
-      // Hide start controls, show question area and end game button
       document.getElementById('startControls').style.display = 'none';
       document.getElementById('questionArea').style.display = 'block';
       document.getElementById('endGameBtn').style.display = 'inline-block';
+      document.getElementById('playerInfo').innerText = `Player: ${playerName}`;
+
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('timer').innerText = `Total Time: ${elapsed}s`;
+      }, 1000);
 
       showQuestion();
     }
@@ -108,7 +138,6 @@
             d1 = d2 = rand(2, 10);
             n1 = rand(1, d1-1);
             n2 = rand(1, d2-1);
-            op = '+';
             correct = `${n1+n2}/${d1}`;
             questionText = `${n1}/${d1} + ${n2}/${d2}`;
             break;
@@ -117,7 +146,6 @@
             d2 = rand(2, 10);
             n1 = rand(1, d1-1);
             n2 = rand(1, d2-1);
-            op = '+';
             let commonDenom = d1 * d2;
             let numSum = n1 * d2 + n2 * d1;
             correct = `${numSum}/${commonDenom}`;
@@ -151,7 +179,10 @@
     function submitAnswer() {
       const userAns = document.getElementById('answer').value.trim();
       const correctAns = questions[currentQuestion].a;
-      if (userAns === correctAns) {
+      const isCorrect = userAns === correctAns;
+      reviewHistory.push({ question: questions[currentQuestion].q, correct: correctAns, user: userAns, result: isCorrect });
+
+      if (isCorrect) {
         score++;
         document.getElementById('feedback').innerText = '✅ Correct!';
       } else {
@@ -175,15 +206,25 @@
     }
 
     function showResult() {
+      clearInterval(timerInterval);
       const stats = JSON.parse(localStorage.getItem('fractionStats') || '{}');
       const s = stats[playerName];
       const total = s.easy + s.medium + s.hard;
-      alert(`${playerName} - Total: ${total} (Easy: ${s.easy}, Medium: ${s.medium}, Hard: ${s.hard})`);
-      location.reload();
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      let message = score === 5 ? "🌟 Genius!" : score >= 4 ? "👏 Excellent!" : score >= 3 ? "👍 Very Good!" : "💡 Keep Trying!";
+
+      let table = '<h3>Review History</h3><table><tr><th>Question</th><th>Your Answer</th><th>Correct</th><th>Result</th></tr>';
+      reviewHistory.forEach(item => {
+        table += `<tr><td>${item.question}</td><td>${item.user}</td><td>${item.correct}</td><td>${item.result ? '✅' : '❌'}</td></tr>`;
+      });
+      table += '</table>';
+
+      document.getElementById('review').innerHTML = `<p><strong>${playerName}</strong> - Total: ${total} (Easy: ${s.easy}, Medium: ${s.medium}, Hard: ${s.hard})<br/>Time Spent: ${elapsed}s<br/>${message}</p>${table}`;
     }
 
     function endGame() {
       if(confirm('Are you sure you want to end the game? Your progress will be lost.')) {
+        clearInterval(timerInterval);
         location.reload();
       }
     }

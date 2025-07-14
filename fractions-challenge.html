@@ -33,26 +33,42 @@
       margin-top: 10px;
       font-weight: bold;
     }
+    #endGameBtn {
+      display: none;
+      margin-top: 15px;
+      background: #e53935;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #endGameBtn:hover {
+      background: #b71c1c;
+    }
   </style>
 </head>
 <body>
   <h1>¼ Fractions Challenge</h1>
   <div class="box">
-    <input type="text" id="playerName" placeholder="Enter your name">
-    <select id="difficulty">
-      <option value="easy">Easy (Same denominator)</option>
-      <option value="medium">Intermediate (Different denominators)</option>
-      <option value="hard">Hard (Mixed operations)</option>
-    </select>
-    <button onclick="startGame()">Start</button>
+    <div id="startControls">
+      <input type="text" id="playerName" placeholder="Enter your name" />
+      <br />
+      <select id="difficulty">
+        <option value="easy">Easy (Same denominator)</option>
+        <option value="medium">Intermediate (Different denominators)</option>
+        <option value="hard">Hard (Mixed operations)</option>
+      </select>
+      <br />
+      <button onclick="startGame()">Start</button>
+    </div>
 
     <div id="questionArea" style="display:none;">
       <div id="question"></div>
-      <input type="text" id="answer" placeholder="Your answer (e.g. 3/4)">
-      <br>
+      <input type="text" id="answer" placeholder="Your answer (e.g. 3/4)" />
+      <br />
       <button onclick="submitAnswer()">Submit</button>
       <div id="feedback"></div>
       <div id="score"></div>
+      <button id="endGameBtn" onclick="endGame()">End Game</button>
     </div>
   </div>
 
@@ -74,7 +90,12 @@
       score = 0;
       currentQuestion = 0;
       questions = generateQuestions(level);
+
+      // Hide start controls, show question area and end game button
+      document.getElementById('startControls').style.display = 'none';
       document.getElementById('questionArea').style.display = 'block';
+      document.getElementById('endGameBtn').style.display = 'inline-block';
+
       showQuestion();
     }
 
@@ -159,6 +180,12 @@
       const total = s.easy + s.medium + s.hard;
       alert(`${playerName} - Total: ${total} (Easy: ${s.easy}, Medium: ${s.medium}, Hard: ${s.hard})`);
       location.reload();
+    }
+
+    function endGame() {
+      if(confirm('Are you sure you want to end the game? Your progress will be lost.')) {
+        location.reload();
+      }
     }
   </script>
 </body>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Math Challenge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      background: linear-gradient(to right, #fceabb, #f8b500);
+      text-align: center;
+    }
+    .box {
+      background: white;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    input, select, button {
+      font-size: 1.2em;
+      margin: 10px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    #question {
+      font-size: 2em;
+      margin: 20px 0;
+    }
+    #feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #endGameBtn {
+      display: none;
+      margin-top: 15px;
+      background: #e53935;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #endGameBtn:hover {
+      background: #b71c1c;
+    }
+    #timer, #perQuestionTimer {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .historyTable {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .historyTable th, .historyTable td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    .historyTable th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>📚 Math Challenges</h1>
+  <div class="box">
+    <button onclick="switchTab('fraction')">¼ Fractions Challenge</button>
+    <button onclick="switchTab('placeValue')">🔢 Place Value Challenge</button>
+
+    <div id="fractionGame" style="display:none;">
+      <!-- Existing Fractions Challenge Game Here -->
+      <p>⏳ Loading Fractions Challenge...</p>
+    </div>
+
+    <div id="placeValueGame" style="display:none;">
+      <h2>🔢 Place Value Challenge</h2>
+      <div id="startControlsPV">
+        <input type="text" id="playerNamePV" placeholder="Enter your name" />
+        <br />
+        <button onclick="startPlaceValueGame()">Start</button>
+      </div>
+
+      <div id="questionAreaPV" style="display:none;">
+        <div id="playerInfoPV"></div>
+        <div id="timerPV">Total Time: 0s</div>
+        <div id="perQuestionTimerPV">Question Time: 10s</div>
+        <div id="questionPV"></div>
+        <div id="choicesPV"></div>
+        <div id="feedbackPV"></div>
+        <div id="scorePV"></div>
+        <button id="endGameBtnPV" onclick="endGamePV()">End Game</button>
+      </div>
+      <div id="historyPV"></div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.getElementById('fractionGame').style.display = tab === 'fraction' ? 'block' : 'none';
+      document.getElementById('placeValueGame').style.display = tab === 'placeValue' ? 'block' : 'none';
+    }
+
+    let currentPV = 0;
+    let scorePV = 0;
+    let questionsPV = [];
+    let playerNamePV = '';
+    let startTimePV;
+    let timerIntervalPV;
+    let questionTimerIntervalPV;
+    let questionTimePV = 10;
+    let gameHistory = [];
+
+    function startPlaceValueGame() {
+      playerNamePV = document.getElementById('playerNamePV').value.trim();
+      if (!playerNamePV) return alert("Enter your name");
+      scorePV = 0;
+      currentPV = 0;
+      questionsPV = generatePlaceValueQuestions();
+      startTimePV = Date.now();
+
+      document.getElementById('startControlsPV').style.display = 'none';
+      document.getElementById('questionAreaPV').style.display = 'block';
+      document.getElementById('endGameBtnPV').style.display = 'inline-block';
+      document.getElementById('playerInfoPV').innerText = `Player: ${playerNamePV}`;
+
+      timerIntervalPV = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTimePV) / 1000);
+        document.getElementById('timerPV').innerText = `Total Time: ${elapsed}s`;
+      }, 1000);
+
+      showPlaceValueQuestion();
+    }
+
+    function generatePlaceValueQuestions() {
+      let places = ['tens', 'ones', 'tenths', 'hundredths', 'thousandths'];
+      let qs = [];
+      for (let i = 0; i < 10; i++) {
+        let number = (Math.random() * 1000).toFixed(3);
+        let parts = number.split(".");
+        let whole = parts[0].padStart(3, '0');
+        let decimal = parts[1];
+        let allDigits = (whole + decimal).split('');
+        let questionType = places[Math.floor(Math.random() * places.length)];
+
+        let indexMap = {
+          tens: whole.length - 2,
+          ones: whole.length - 1,
+          tenths: whole.length,
+          hundredths: whole.length + 1,
+          thousandths: whole.length + 2
+        };
+
+        let correct = allDigits[indexMap[questionType]];
+        let options = shuffle([correct, randDigit(), randDigit(), randDigit()]);
+        qs.push({
+          number,
+          questionType,
+          question: `What digit is in the ${questionType} place in ${number}?`,
+          correct,
+          options
+        });
+      }
+      return qs;
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function randDigit() {
+      return Math.floor(Math.random() * 10).toString();
+    }
+
+    function startPerQuestionTimerPV() {
+      let t = questionTimePV;
+      document.getElementById('perQuestionTimerPV').innerText = `Question Time: ${t}s`;
+      clearInterval(questionTimerIntervalPV);
+      questionTimerIntervalPV = setInterval(() => {
+        t--;
+        document.getElementById('perQuestionTimerPV').innerText = `Question Time: ${t}s`;
+        if (t <= 0) {
+          clearInterval(questionTimerIntervalPV);
+          submitPlaceValueAnswer('');
+        }
+      }, 1000);
+    }
+
+    function showPlaceValueQuestion() {
+      const q = questionsPV[currentPV];
+      document.getElementById('questionPV').innerText = `Q${currentPV+1}: ${q.question}`;
+      document.getElementById('feedbackPV').innerText = '';
+      document.getElementById('scorePV').innerText = `Score: ${scorePV}`;
+
+      const choiceHTML = q.options.map(opt => `<button onclick="submitPlaceValueAnswer('${opt}')">${opt}</button>`).join("<br>");
+      document.getElementById('choicesPV').innerHTML = choiceHTML;
+
+      startPerQuestionTimerPV();
+    }
+
+    function submitPlaceValueAnswer(ans) {
+      clearInterval(questionTimerIntervalPV);
+      const q = questionsPV[currentPV];
+      if (ans === q.correct) {
+        scorePV++;
+        document.getElementById('feedbackPV').innerText = '✅ Correct!';
+      } else {
+        document.getElementById('feedbackPV').innerText = `❌ Wrong! Correct was ${q.correct}`;
+      }
+
+      gameHistory.push({
+        number: q.number,
+        place: q.questionType,
+        correctAnswer: q.correct,
+        playerAnswer: ans
+      });
+
+      currentPV++;
+      if (currentPV < questionsPV.length) {
+        setTimeout(showPlaceValueQuestion, 1000);
+      } else {
+        setTimeout(showPlaceValueResult, 1000);
+      }
+    }
+
+    function showPlaceValueResult() {
+      clearInterval(timerIntervalPV);
+      const elapsed = Math.floor((Date.now() - startTimePV) / 1000);
+      let message = scorePV === 10 ? "🌟 Genius!" : scorePV >= 8 ? "👏 Excellent!" : scorePV >= 5 ? "👍 Good Job!" : "💡 Keep Practicing!";
+      let historyHTML = `<h3>🧠 Review History</h3><table class='historyTable'><tr><th>Number</th><th>Place</th><th>Correct</th><th>Your Answer</th></tr>`;
+      gameHistory.forEach(row => {
+        historyHTML += `<tr><td>${row.number}</td><td>${row.place}</td><td>${row.correctAnswer}</td><td>${row.playerAnswer || '⏱️ Timed Out'}</td></tr>`;
+      });
+      historyHTML += `</table>`;
+      document.getElementById('historyPV').innerHTML = historyHTML;
+
+      alert(`${playerNamePV} - Score: ${scorePV}/10\nTime: ${elapsed}s\n${message}`);
+    }
+
+    function endGamePV() {
+      if(confirm('Are you sure you want to end the game? Your progress will be lost.')) {
+        clearInterval(timerIntervalPV);
+        clearInterval(questionTimerIntervalPV);
+        location.reload();
+      }
+    }
+
+    switchTab('fraction');
+  </script>
+</body>
+</html>
